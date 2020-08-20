@@ -462,6 +462,7 @@ function bAudioBot (divId,roomId) {
             if (self.blacklist.checkUID(data[i]["uid"])){
                 continue;
             }
+
             // 如果不是房管或者舰长，跳过。
             // if (data[i]["isadmin"] === 1 || data[i]["guard_level"] > 0){
             //     // do nothing
