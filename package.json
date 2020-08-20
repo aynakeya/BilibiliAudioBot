@@ -1,0 +1,17 @@
+{
+  "name": "bilibiliaudiobot",
+  "version": "0.0.4",
+  "description": "an simple bilibili audio bot",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "packager": "electron-packager . BilibiliAudioBot --overwrite --ignore=node_modules --ignore=.idea"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^9.2.0",
+    "http-server": "^0.12.3"
+  }
+}
