@@ -17,7 +17,7 @@ function DamukuApi(rooomid) {
     this.DamuApi = "https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory";
     this.latestDamuTime = 0;
 
-    this.getNewestDamu = function(){
+    this.getNewestDamu = function () {
         $.ajaxSetup({
             async: false,
             crossDomain: true,
@@ -25,23 +25,28 @@ function DamukuApi(rooomid) {
                 withCredentials: true
             }
         });
-        var rs = $.post(this.DamuApi,{"roomid":this.roomId});
-        if (rs.status === 200){
+        var rs = $.post(this.DamuApi, {"roomid": this.roomId});
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 0){
+            if (data["code"] === 0) {
                 var rdata = [];
-                for (var i=0;i<data["data"]["room"].length;i++){
-                    if (parseInt(data["data"]["room"][i]["check_info"]["ts"]) <= this.latestDamuTime){
+                for (var i = 0; i < data["data"]["room"].length; i++) {
+                    if (parseInt(data["data"]["room"][i]["check_info"]["ts"]) <= this.latestDamuTime) {
                         continue;
                     }
-                    rdata.push({"sender":data["data"]["room"][i]["nickname"],"text":data["data"]["room"][i]["text"],
-                    "isadmin":data["data"]["room"][i]["isadmin"],"guard_level":data["data"]["room"][i]["guard_level"],"uid":data["data"]["room"][i]["uid"].toString()});
+                    rdata.push({
+                        "sender": data["data"]["room"][i]["nickname"],
+                        "text": data["data"]["room"][i]["text"],
+                        "isadmin": data["data"]["room"][i]["isadmin"],
+                        "guard_level": data["data"]["room"][i]["guard_level"],
+                        "uid": data["data"]["room"][i]["uid"].toString()
+                    });
                     this.latestDamuTime = parseInt(data["data"]["room"][i]["check_info"]["ts"]);
                 }
                 return rdata
             }
             return [];
-        }else{
+        } else {
             return [];
         }
     }
@@ -57,20 +62,20 @@ function AudioBilibiliApi() {
 
     this.getSid = function (url) {
         var au = /au[0-9]+/.exec(url);
-        if (au === null){
+        if (au === null) {
             return 0;
-        }else{
+        } else {
             return au[0].substring(2);
         }
     };
 
-    this.searchSid = function(keyword){
-        var rs = httpGet(this.bAudioSearch+keyword);
-        if (rs === null || rs.status !== 200){
+    this.searchSid = function (keyword) {
+        var rs = httpGet(this.bAudioSearch + keyword);
+        if (rs === null || rs.status !== 200) {
             return 0;
         }
         var data = JSON.parse(rs.responseText);
-        if (data["code"] !== 0 || data["data"]["result"].length === 0){
+        if (data["code"] !== 0 || data["data"]["result"].length === 0) {
             return 0;
         }
         return data["data"]["result"][0]["id"].toString();
@@ -78,9 +83,9 @@ function AudioBilibiliApi() {
 
     this.getamid = function (url) {
         var au = /am[0-9]+/.exec(url);
-        if (au === null){
+        if (au === null) {
             return 0;
-        }else{
+        } else {
             return au[0].substring(2);
         }
     };
@@ -95,13 +100,18 @@ function AudioBilibiliApi() {
             }
         });
         var rs = $.get(url);
-        if (rs.status === 200){
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 0){
-                return {"name":data["data"]["title"],"up":data["data"]["up_name"],"lyric":data["data"]["lyric_url"],"cover":data["data"]["cover_url"]};
+            if (data["code"] === 0) {
+                return {
+                    "name": data["data"]["title"],
+                    "up": data["data"]["up_name"],
+                    "lyric": data["data"]["lyric_url"],
+                    "cover": data["data"]["cover_url"]
+                };
             }
             return null;
-        }else{
+        } else {
             return null;
         }
     };
@@ -116,30 +126,30 @@ function AudioBilibiliApi() {
             }
         });
         var rs = $.get(url);
-        if (rs.status === 200){
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 0){
-                return {"cdns":data["data"]["cdns"]};
+            if (data["code"] === 0) {
+                return {"cdns": data["data"]["cdns"]};
             }
             return null;
-        }else{
+        } else {
             return null;
         }
     };
-    
+
     this.getAudioList = function (amid) {
         var pn = 1;
         var aList = [];
-        while (true){
-            var rs = httpGet(this.bAudioListInfo+"sid="+amid+"&pn="+pn);
-            if (rs === null || rs.status !== 200){
+        while (true) {
+            var rs = httpGet(this.bAudioListInfo + "sid=" + amid + "&pn=" + pn);
+            if (rs === null || rs.status !== 200) {
                 break
             }
             var data = JSON.parse(rs.responseText);
-            for (var i=0;i<data["data"]["data"].length;i++){
+            for (var i = 0; i < data["data"]["data"].length; i++) {
                 aList.push(data["data"]["data"][i]["id"]);
             }
-            if (data["data"]["pageCount"] === data["data"]["curPage"]){
+            if (data["data"]["pageCount"] === data["data"]["curPage"]) {
                 break
             }
         }
@@ -147,11 +157,12 @@ function AudioBilibiliApi() {
     }
 }
 
-function AudioNeteaseApi(){
+function AudioNeteaseApi() {
     this.searchApi = "http://musicapi.leanapp.cn/search?keywords=";
     this.lyricApi = "https://music.163.com/api/song/media?id=";
     this.albumApi = "http://musicapi.leanapp.cn/album?id=";
     this.audioApi = "https://music.163.com/song/media/outer/url?id=";
+    this.audioApi1 = "http://musicapi.leanapp.cn/music/url?id=";
     this.audioListApi = "http://musicapi.leanapp.cn/playlist/detail?id=";
 
     this.getInfo = function (keyword) {
@@ -166,68 +177,69 @@ function AudioNeteaseApi(){
         var info = {};
         info["sid"] = null;
         var rs = $.get(url);
-        if (rs.status === 200){
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 200 && data["result"]["songCount"] > 0){
-                for (var i=0;i<data["result"]["songs"].length;i++){
-                    if (data["result"]["songs"][i]["album"]["status"] !== 0){
-                        continue;
-                    }
-                    if ((data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)){
+            if (data["code"] === 200 && data["result"]["songCount"] > 0) {
+                for (var i = 0; i < data["result"]["songs"].length; i++) {
+                    if ((data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)) {
                         info["sid"] = data["result"]["songs"][i]["id"].toString();
                         info["aid"] = data["result"]["songs"][i]["album"]["id"];
                         info["name"] = data["result"]["songs"][i]["name"];
                         break
                     }
                 }
-            }else{
+            } else {
                 return null;
             }
-        }else{
+        } else {
             return null;
         }
-        if (info["sid"] === null){
+        if (info["sid"] === null) {
             return null;
         }
         rs = $.get(this.lyricApi + info["sid"]);
-        if (rs.status === 200){
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 200 && typeof(data["lyric"]) !== "undefined"){
+            if (data["code"] === 200 && typeof (data["lyric"]) !== "undefined") {
                 info["lyric"] = data["lyric"];
-            }else{
+            } else {
                 info["lyric"] = "";
             }
         }
         rs = $.get(this.albumApi + info["aid"]);
-        if (rs.status === 200){
+        if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 200){
+            if (data["code"] === 200) {
                 info["cover"] = data["album"]["picUrl"];
-            }else{
+            } else {
                 info["cover"] = "";
             }
         }
         // 链接检查
-        rs = $.get(this.audioApi+info["sid"]+".mp3");
-        // 如果type不是audio (没有audio)
-        if (rs.getResponseHeader("content-type").indexOf("audio") === -1){
-            return null;
+        rs = $.get(this.audioApi1 + info["sid"]);
+        // 如果有版权问题 404
+        if (rs.status === 200) {
+            var data = JSON.parse(rs.responseText);
+            if (data["code"] === 200 && data["data"][0]["code"] === 404) {
+                return null;
+            }
+            info["cdns"] = [this.audioApi + info["sid"] + ".mp3"];
+            return info;
         }
-        info["cdns"] = [this.audioApi+info["sid"]+".mp3"];
-        return info;
+        return null;
     };
 
     this.getAudioList = function (id) {
-        var rs = httpGet(this.audioListApi+id);
+        var rs = httpGet(this.audioListApi + id);
         var aList = [];
-        if (rs === null || rs.status !== 200){
+        if (rs === null || rs.status !== 200) {
             return aList;
         }
         var data = JSON.parse(rs.responseText);
-        if (data["code"] !== 200){
+        if (data["code"] !== 200) {
             return aList;
         }
-        for (var i=0;i<data["playlist"]["trackIds"].length;i++){
+        for (var i = 0; i < data["playlist"]["trackIds"].length; i++) {
             aList.push(data["playlist"]["trackIds"][i]["id"]);
         }
         return aList;
@@ -237,46 +249,54 @@ function AudioNeteaseApi(){
 function DefaultPlayList(ab) {
     this.ab = ab;
     this.sList = [];
-    this.index = null;
-    this.availableType = ["bilibili","netease"];
+    this.index = 0;
+    this.availableType = ["bilibili", "netease"];
 
     this.getNext = function () {
-        if (this.sList.length === 0){
+        if (this.sList.length === 0) {
             return null;
         }
-        if (this.index === this.sList.length){
+        if (this.index === this.sList.length) {
             this.index = 0;
         }
-        this.index +=1;
-        return this.sList[this.index-1];
+        this.index += 1;
+        return this.sList[this.index - 1];
     };
 
-    this.getByIndex = function(index){
-        if (this.index <0 || this.index >= this.sList.length){
+    this.getNextRandom = function(){
+        if (this.sList.length === 0) {
+            return null;
+        }
+        this.index = Math.floor(Math.random()*this.sList.length);
+        return this.sList[this.index]
+    };
+
+    this.getByIndex = function (index) {
+        if (this.index < 0 || this.index >= this.sList.length) {
             return null;
         }
         return this.sList[index];
     };
 
-    this.addAudio = function(aType, aName){
-      this.sList.push({"type":aType,"name":aName})
+    this.addAudio = function (aType, aName) {
+        this.sList.push({"type": aType, "name": aName})
     };
 
     this.addBilibiliList = function (url) {
         var amid = this.ab.audioApi.getamid(url);
-        if (amid === 0){
+        if (amid === 0) {
             return
         }
         var alist = this.ab.audioApi.getAudioList(amid);
-        for (var i=0;i<alist.length;i++){
-            this.addAudio("bilibili","au"+alist[i]);
+        for (var i = 0; i < alist.length; i++) {
+            this.addAudio("bilibili", "au" + alist[i]);
         }
     };
 
     this.addNeteaseList = function (id) {
         var alist = this.ab.audioNeteaseApi.getAudioList(id);
-        for (var i=0;i<alist.length;i++){
-            this.addAudio("netease",alist[i].toString());
+        for (var i = 0; i < alist.length; i++) {
+            this.addAudio("netease", alist[i].toString());
         }
     };
 }
@@ -293,9 +313,9 @@ function BlackListMananger() {
     };
 
     // 没有返回false 有返回true
-    this.checkKeyword = function(text){
-        for (var i=0;i<this.keywordList.length;i++){
-            if (this.keywordList[i].test(text)){
+    this.checkKeyword = function (text) {
+        for (var i = 0; i < this.keywordList.length; i++) {
+            if (this.keywordList[i].test(text)) {
                 return true;
             }
         }
@@ -303,20 +323,20 @@ function BlackListMananger() {
     };
 
     // 没有返回false 有返回true
-    this.checkSongId = function (type,id) {
-        for (var i=0;i<this.songidList.length;i++){
-            if (this.songidList[i]["type"] === type && this.songidList[i]["id"] === id){
+    this.checkSongId = function (type, id) {
+        for (var i = 0; i < this.songidList.length; i++) {
+            if (this.songidList[i]["type"] === type && this.songidList[i]["id"] === id) {
                 return true;
             }
         }
         return false;
     };
 
-    this.addSongId = function(atype,id){
-        this.songidList.push({"type":atype,"id":id});
+    this.addSongId = function (atype, id) {
+        this.songidList.push({"type": atype, "id": id});
     };
 
-    this.addUID = function(uid){
+    this.addUID = function (uid) {
         this.uidList.push(uid);
     };
 
@@ -326,11 +346,11 @@ function BlackListMananger() {
     }
 }
 
-function bAudioBot (divId,roomId) {
+function bAudioBot(divId, roomId) {
     var self = this;
     this.ap = new APlayer({
         container: document.getElementById(divId),
-        autoplay:true,
+        autoplay: true,
         showlrc: true,
         volume: 0.6
     });
@@ -344,34 +364,36 @@ function bAudioBot (divId,roomId) {
     this.damukuApi.getNewestDamu();
 
 
-    this.ap.on("ended",function () {
+    this.ap.on("ended", function () {
         self.removeFirst();
     });
 
-    this.ap.on("listadd",function () {
-        if (self.ap.audio.paused){
+    this.ap.on("listadd", function () {
+        if (self.ap.audio.paused) {
             self.ap.play();
         }
     });
 
     // 如果你不想闲置歌单里的歌被顶掉的话就把这段注释掉.
-    this.ap.on("listadd",function () {
-        if (self.ap.list.audios.length > 0 && self.ap.list.audios[0].artist === "System"){
+    this.ap.on("listadd", function () {
+        if (self.ap.list.audios.length > 0 && self.ap.list.audios[0].artist === "System") {
             self.skipForward();
         }
     });
 
 
-    this.ap.on("waiting",function () {
-        while (self.ap.list.audios.length === 0 && self.defaultPlayList.sList.length >= 0){
+    this.ap.on("waiting", function () {
+        while (self.ap.list.audios.length === 0 && self.defaultPlayList.sList.length >= 0) {
             var nextAudio = self.defaultPlayList.getNext();
-            if(nextAudio === null){
+            // 如果要随机闲置列表的话
+            //var nextAudio = self.defaultPlayList.getNextRandom();
+            if (nextAudio === null) {
                 return;
             }
-            if (nextAudio["type"] === "bilibili"){
-                self.addBilibili(nextAudio["name"],"System");
-            }else if (nextAudio["type"] === "netease"){
-                self.addNetease(nextAudio["name"],"System");
+            if (nextAudio["type"] === "bilibili") {
+                self.addBilibili(nextAudio["name"], "System");
+            } else if (nextAudio["type"] === "netease") {
+                self.addNetease(nextAudio["name"], "System");
             }
         }
     });
@@ -382,17 +404,17 @@ function bAudioBot (divId,roomId) {
     };
 
     this.remove = function (index) {
-        if (this.ap.list.audios.length === 0){
+        if (this.ap.list.audios.length === 0) {
             return;
         }
-        if (index < 0 || index >= this.ap.list.audios.length){
+        if (index < 0 || index >= this.ap.list.audios.length) {
             return
         }
-        if (index === 0){
+        if (index === 0) {
             this.ap.pause();
             this.ap.list.remove(index);
             this.ap.play();
-        }else{
+        } else {
             this.ap.list.remove(index);
         }
 
@@ -405,26 +427,26 @@ function bAudioBot (divId,roomId) {
 
 
     // 点bilibili歌
-    this.addBilibili =function (url,sender) {
-        var sid = this.audioApi.getSid(url) !== 0 ? this.audioApi.getSid(url):this.audioApi.searchSid(url);
-        if (sid === 0){
+    this.addBilibili = function (url, sender) {
+        var sid = this.audioApi.getSid(url) !== 0 ? this.audioApi.getSid(url) : this.audioApi.searchSid(url);
+        if (sid === 0) {
             return false;
         }
         //黑名单检查
-        if (this.blacklist.checkKeyword(url) || this.blacklist.checkSongId("bilibili",sid)){
+        if (this.blacklist.checkKeyword(url) || this.blacklist.checkSongId("bilibili", sid)) {
             return false;
         }
         var info = this.audioApi.getInfo(sid);
-        if (info === null){
+        if (info === null) {
             return false;
         }
         var cdns = this.audioApi.getPlayUrl(sid);
-        if (cdns === null){
+        if (cdns === null) {
             return false;
         }
 
         this.ap.list.add({
-            name: info["name"] + " - "+ info["up"],
+            name: info["name"] + " - " + info["up"],
             artist: sender,
             url: cdns["cdns"][0],
             cover: info["cover"],
@@ -434,14 +456,14 @@ function bAudioBot (divId,roomId) {
     };
 
     // 点网易歌
-    this.addNetease =function (url,sender) {
+    this.addNetease = function (url, sender) {
         var keyword = url;
         var info = this.audioNeteaseApi.getInfo(keyword);
-        if (info === null){
+        if (info === null) {
             return false;
         }
         //黑名单检查
-        if (this.blacklist.checkKeyword(keyword) || this.blacklist.checkSongId("netease",info["sid"])){
+        if (this.blacklist.checkKeyword(keyword) || this.blacklist.checkSongId("netease", info["sid"])) {
             return false;
         }
         this.ap.list.add({
@@ -456,10 +478,10 @@ function bAudioBot (divId,roomId) {
 
 
     this.checkDamu = function () {
-        var data =self.damukuApi.getNewestDamu();
-        for (var i=0;i<data.length;i++){
+        var data = self.damukuApi.getNewestDamu();
+        for (var i = 0; i < data.length; i++) {
             // 如果在黑名单内，直接跳过
-            if (self.blacklist.checkUID(data[i]["uid"])){
+            if (self.blacklist.checkUID(data[i]["uid"])) {
                 continue;
             }
 
@@ -471,31 +493,31 @@ function bAudioBot (divId,roomId) {
             // }
 
             // b站点歌关键字
-            if (data[i]["text"].indexOf("点b歌") === 0){
+            if (data[i]["text"].indexOf("点b歌") === 0) {
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
-                self.addBilibili(keyword,data[i]["sender"]);
+                self.addBilibili(keyword, data[i]["sender"]);
                 continue;
             }
             // 网易点歌关键字
-            if (data[i]["text"].indexOf("点w歌") === 0){
+            if (data[i]["text"].indexOf("点w歌") === 0) {
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
-                self.addNetease(keyword,data[i]["sender"]);
+                self.addNetease(keyword, data[i]["sender"]);
                 continue;
             }
             // 切歌关键字
-            if (data[i]["text"].indexOf("切歌") === 0){
+            if (data[i]["text"].indexOf("切歌") === 0) {
                 // 房管切歌
-                if (self.ap.list.audios.length > 0 && data[i]["isadmin"] === 1){
+                if (self.ap.list.audios.length > 0 && data[i]["isadmin"] === 1) {
                     self.skipForward();
                     continue;
                 }
                 // 舰长切歌
-                if (self.ap.list.audios.length > 0 && data[i]["guard_level"] > 0){
+                if (self.ap.list.audios.length > 0 && data[i]["guard_level"] > 0) {
                     self.skipForward();
                     continue;
                 }
                 // 切自己歌
-                if (self.ap.list.audios.length > 0 && data[i]["sender"] === self.ap.list.audios[0]["artist"]){
+                if (self.ap.list.audios.length > 0 && data[i]["sender"] === self.ap.list.audios[0]["artist"]) {
                     self.skipForward();
                     continue;
                 }
@@ -504,17 +526,17 @@ function bAudioBot (divId,roomId) {
     };
 
     // 改背景颜色
-    this.changeBackgroundColor = function(color){
+    this.changeBackgroundColor = function (color) {
         document.body.style.backgroundColor = color;
     };
 
-    this.setBackroundImage = function(url,repeat,size){
-        document.body.style.backgroundImage="url("+url+")";
-        document.body.style.backgroundRepeat = repeat ;
+    this.setBackroundImage = function (url, repeat, size) {
+        document.body.style.backgroundImage = "url(" + url + ")";
+        document.body.style.backgroundRepeat = repeat;
         document.body.style.backgroundSize = size;
     };
 
     //开始获取弹幕 500ms
-    this.fetchDamuRepeater = setInterval(this.checkDamu,500);
+    this.fetchDamuRepeater = setInterval(this.checkDamu, 500);
     this.changeBackgroundColor("#FFB6C1");
 }
