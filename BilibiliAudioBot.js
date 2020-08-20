@@ -471,7 +471,7 @@ function bAudioBot (divId,roomId) {
             // }
 
             // b站点歌关键字
-            if (data[i]["text"].indexOf("点歌b") === 0){
+            if (data[i]["text"].indexOf("点b歌") === 0){
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
                 self.addBilibili(keyword,data[i]["sender"]);
                 continue;
