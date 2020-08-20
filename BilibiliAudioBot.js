@@ -168,7 +168,7 @@ function AudioNeteaseApi(){
         var rs = $.get(url);
         if (rs.status === 200){
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 200){
+            if (data["code"] === 200 && data["result"]["songCount"] > 0){
                 for (var i=0;i<data["result"]["songs"].length;i++){
                     if (data["result"]["songs"][i]["album"]["status"] !== 0){
                         continue;
