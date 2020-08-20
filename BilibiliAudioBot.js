@@ -170,7 +170,10 @@ function AudioNeteaseApi(){
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 200){
                 for (var i=0;i<data["result"]["songs"].length;i++){
-                    if (data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8){
+                    if (data["result"]["songs"][i]["album"]["status"] !== 0){
+                        continue;
+                    }
+                    if ((data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)){
                         info["sid"] = data["result"]["songs"][i]["id"].toString();
                         info["aid"] = data["result"]["songs"][i]["album"]["id"];
                         info["name"] = data["result"]["songs"][i]["name"];
@@ -203,6 +206,12 @@ function AudioNeteaseApi(){
             }else{
                 info["cover"] = "";
             }
+        }
+        // 链接检查
+        rs = $.get(this.audioApi+info["sid"]+".mp3");
+        // 如果type不是audio (没有audio)
+        if (rs.getResponseHeader("content-type").indexOf("audio") === -1){
+            return null;
         }
         info["cdns"] = [this.audioApi+info["sid"]+".mp3"];
         return info;
@@ -399,19 +408,19 @@ function bAudioBot (divId,roomId) {
     this.addBilibili =function (url,sender) {
         var sid = this.audioApi.getSid(url) !== 0 ? this.audioApi.getSid(url):this.audioApi.searchSid(url);
         if (sid === 0){
-            return;
+            return false;
         }
         //黑名单检查
         if (this.blacklist.checkKeyword(url) || this.blacklist.checkSongId("bilibili",sid)){
-            return;
+            return false;
         }
         var info = this.audioApi.getInfo(sid);
         if (info === null){
-            return;
+            return false;
         }
         var cdns = this.audioApi.getPlayUrl(sid);
         if (cdns === null){
-            return;
+            return false;
         }
 
         this.ap.list.add({
@@ -421,6 +430,7 @@ function bAudioBot (divId,roomId) {
             cover: info["cover"],
             lrc: info["lyric"],
         });
+        return true;
     };
 
     // 点网易歌
@@ -428,11 +438,11 @@ function bAudioBot (divId,roomId) {
         var keyword = url;
         var info = this.audioNeteaseApi.getInfo(keyword);
         if (info === null){
-            return;
+            return false;
         }
         //黑名单检查
         if (this.blacklist.checkKeyword(keyword) || this.blacklist.checkSongId("netease",info["sid"])){
-            return;
+            return false;
         }
         this.ap.list.add({
             name: info["name"],
@@ -441,6 +451,7 @@ function bAudioBot (divId,roomId) {
             cover: info["cover"],
             lrc: info["lyric"],
         });
+        return true;
     };
 
 
@@ -459,7 +470,7 @@ function bAudioBot (divId,roomId) {
             // }
 
             // b站点歌关键字
-            if (data[i]["text"].indexOf("点b歌") === 0){
+            if (data[i]["text"].indexOf("点歌b") === 0){
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
                 self.addBilibili(keyword,data[i]["sender"]);
                 continue;
