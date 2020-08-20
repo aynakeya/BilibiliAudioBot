@@ -1,6 +1,6 @@
 {
   "name": "bilibiliaudiobot",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "an simple bilibili audio bot",
   "main": "main.js",
   "scripts": {
