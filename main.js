@@ -1,5 +1,4 @@
-const { app, BrowserWindow,Menu,dialog} = require('electron');
-
+const { app, session,BrowserWindow,Menu,dialog} = require('electron');
 
 var mainWindow;
 function createMenu(){
@@ -60,6 +59,10 @@ function createMenu(){
     Menu.setApplicationMenu(menu);
 }
 
+const filter = {
+    urls: ['https://*.bilibili.com/*',"https://*.bilivideo.com/*","*://*.com/*bilivideo.com*"]
+}
+
 app.on('window-all-closed', function() {
     // 在 OS X 上，通常用户在明确地按下 Cmd + Q 之前
     // 应用会保持活动状态
@@ -84,4 +87,11 @@ app.on('ready', function() {
         // 但这次不是。
         mainWindow = null;
     });
+
+    session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+        details.requestHeaders['Referer'] = 'https://www.bilibili.com';
+        callback({ requestHeaders: details.requestHeaders });
+    })
 });
+
+
