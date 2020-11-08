@@ -9,7 +9,7 @@
     "packager": "electron-packager . BilibiliAudioBot --overwrite --ignore=node_modules --ignore=.idea",
     "packagerDenpend": "electron-packager . BilibiliAudioBot --overwrite  --ignore=.idea"
   },
-  "author": "",
+  "author": "Aynakeya",
   "license": "MIT",
   "dependencies": {
     "@nondanee/unblockneteasemusic": "^0.25.3",
