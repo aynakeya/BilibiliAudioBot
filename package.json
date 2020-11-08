@@ -13,10 +13,7 @@
   "dependencies": {
     "@nondanee/unblockneteasemusic": "^0.25.3",
     "NeteaseCloudMusicApi": "^3.46.1",
-    "body-parser": "^1.19.0",
     "electron": "^9.2.0",
-    "iconv-jschardet": "^2.0.11",
-    "iconv-lite": "^0.6.2"
   },
   "devDependencies": {}
 }

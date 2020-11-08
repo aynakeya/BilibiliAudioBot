@@ -1,8 +1,8 @@
 var myConfig = {
     // 房间号
-    "room_id": "208259",
+    "room_id": null,
     // 是否自动开启
-    "auto_create":true,
+    "auto_create":false,
     // 闲置歌单
     "playlist":{
         // 网易云歌单id
