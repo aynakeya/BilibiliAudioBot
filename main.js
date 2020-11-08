@@ -86,6 +86,7 @@ app.on('ready', function() {
         // 通常会把多个 window 对象存放在一个数组里面，
         // 但这次不是。
         mainWindow = null;
+
     });
 
     session.defaultSession.webRequest.onBeforeSendHeaders(bilibilifilter, (details, callback) => {

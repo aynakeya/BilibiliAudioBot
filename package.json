@@ -14,9 +14,9 @@
   "dependencies": {
     "@nondanee/unblockneteasemusic": "^0.25.3",
     "NeteaseCloudMusicApi": "^3.46.1"
-
   },
   "devDependencies": {
+    "electron-packager": "^15.1.0",
     "electron": "^9.2.0"
   }
 }
