@@ -6,14 +6,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
-    "packager": "electron-packager . BilibiliAudioBot --overwrite --ignore=node_modules --ignore=.idea"
+    "packager": "electron-packager . BilibiliAudioBot --overwrite --ignore=node_modules --ignore=.idea",
+    "packagerDenpend": "electron-packager . BilibiliAudioBot --overwrite  --ignore=.idea"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@nondanee/unblockneteasemusic": "^0.25.3",
-    "NeteaseCloudMusicApi": "^3.46.1",
-    "electron": "^9.2.0",
+    "NeteaseCloudMusicApi": "^3.46.1"
+
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "electron": "^9.2.0"
+  }
 }
