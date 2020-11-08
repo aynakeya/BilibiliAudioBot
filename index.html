@@ -5,15 +5,19 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" integrity="sha256-uqQQGnDcmRKvhKwc5Vm4XT1GQ2oV6t1U0NR2N9tV+BQ=" crossorigin="anonymous">
 	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
 	<script src="BilibiliAudioBot.js"></script>
+	<script src="config.js"></script>
 	<title>b站音频点歌机</title>
 </head>
 <body>
+<script>
+	var useConfig = myConfig;
+</script>
 <div id="preaction">
 	<p>输入房间号，要真实房间号，其他的还在咕</p>
 	<p>点歌目前只能点au号，其他的还在咕</p>
 	<p>点歌使用: "点b歌 au号" 例如 点b歌 au273200</p>
 	<p>切歌使用: "切b歌"</p>
-	<input id="rid" type="text"/><button onclick="createBot()">开启点歌机</button>
+	<input id="rid" type="text"/><button onclick="createBot(useConfig||defaultConfig)">开启点歌机</button>
 	<p>开源组件许可</p>
 	<p>-------------------</p>
 	<p>Aplayer.js</p>
@@ -43,34 +47,17 @@
 <br><br><br><br>
 <div id="aplayer"></div>
 <script type="application/javascript">
-	function createBot() {
-		//audiobot = new bAudioBot("aplayer","3819533");
-		audiobot = new bAudioBot("aplayer",document.getElementById("rid").value);
+	function createBot(bconfig) {
+		if (bconfig.room_id === null) {
+			audiobot = new bAudioBot("aplayer", document.getElementById("rid").value,bconfig);
+		} else {
+			audiobot = new bAudioBot("aplayer", bconfig.room_id,bconfig);
+		}
 		document.getElementById("preaction").remove();
+	}
 
-		// 添加网易云默认歌单
-		// audiobot.defaultPlayList.addNeteaseList("2033560788");
-		// 添加bilibili默认歌单
-		// audiobot.defaultPlayList.addBilibiliList("am10624");
-		// 添加bilibili默认歌曲
-		// audiobot.defaultPlayList.addAudio("bilibili","au1760676");
-		// 添加网易云默认歌曲
-		// audiobot.defaultPlayList.addAudio("netease","509964012");
-
-		// 正则匹配黑名单hop（全局），不过我不会写
-		// audiobot.blacklist.addKeyword(/hop/i);
-		// 网易id黑名单 (这边是 hop)
-		// audiobot.blacklist.addSongId("netease","561493928");
-		// b站id黑名单 (这个是 直播间彩字vs直播间白字)
-		// audiobot.blacklist.addSongId("bilibili","1600977");
-
-		// 黑名单用户
-		// audiobot.blacklist.addUID("10003632");
-
-		// 修改背景颜色，这里是 绿色
-		// audiobot.changeBackgroundColor("00FF00");
-		// 修改背景图片, 第一个是url地址，第二个是repeat，一般用no-repeaet 最后一个是size
-		// audiobot.setBackroundImage("https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=2479754826,2323203690&fm=15&gp=0.jpg","no-repeat","100%");
+	if (useConfig && useConfig.auto_create){
+		createBot(useConfig);
 	}
 </script>
 </body>

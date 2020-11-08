@@ -1,6 +1,7 @@
 const { app, session,BrowserWindow,Menu,dialog} = require('electron');
+const apiserver = require("./ApiServer.js");
 
-var mainWindow;
+
 function createMenu(){
     let template = [
         {
@@ -59,8 +60,11 @@ function createMenu(){
     Menu.setApplicationMenu(menu);
 }
 
-const filter = {
-    urls: ['https://*.bilibili.com/*',"https://*.bilivideo.com/*","*://*.com/*bilivideo.com*"]
+const bilibilifilter = {
+    urls: ['https://*.bilibili.com/*',
+        "https://*.bilivideo.com/*",
+        "*://*.com/*bilivideo.com*",
+        "https://api.live.bilibili.com/*"]
 }
 
 app.on('window-all-closed', function() {
@@ -73,11 +77,7 @@ app.on('window-all-closed', function() {
 
 app.on('ready', function() {
     // 创建浏览器窗口。
-    mainWindow = new BrowserWindow({width: 800, height: 600});
-
-    // 加载应用的 index.html
-    mainWindow.loadFile('index.html',{userAgent:"BilibiliClient/2.33.3",httpReferrer:"https://www.bilibili.com"});
-
+    var mainWindow = new BrowserWindow({width: 800, height: 600});
     createMenu();
 
     // 当 window 被关闭，这个事件会被发出
@@ -88,10 +88,15 @@ app.on('ready', function() {
         mainWindow = null;
     });
 
-    session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+    session.defaultSession.webRequest.onBeforeSendHeaders(bilibilifilter, (details, callback) => {
         details.requestHeaders['Referer'] = 'https://www.bilibili.com';
+        //details.requestHeaders["origin"] = "https://www.bilibili.com";
         callback({ requestHeaders: details.requestHeaders });
-    })
+    });
+
+    // 加载应用的 index.html
+    mainWindow.loadFile('index.html',{userAgent:"BilibiliClient/2.33.3",httpReferrer:"https://www.bilibili.com"});
+
 });
 
 

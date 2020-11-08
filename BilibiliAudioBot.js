@@ -157,13 +157,15 @@ function AudioBilibiliApi() {
     }
 }
 
-function AudioNeteaseApi() {
-    this.searchApi = "http://musicapi.leanapp.cn/search?keywords=";
+function AudioNeteaseApi(ab) {
+    this.ab = ab;
+    this.searchApi = "http://127.0.0.1:8050/netease/search?keywords=";
     this.lyricApi = "https://music.163.com/api/song/media?id=";
-    this.albumApi = "http://musicapi.leanapp.cn/album?id=";
+    this.albumApi = "http://127.0.0.1:8050/netease/album?id=";
     this.audioApi = "https://music.163.com/song/media/outer/url?id=";
-    this.audioApi1 = "http://musicapi.leanapp.cn/music/url?id=";
-    this.audioListApi = "http://musicapi.leanapp.cn/playlist/detail?id=";
+    this.audiomatchApi = "http://127.0.0.1:8050/netease/audio/match?id=";
+    this.audioApi1 = "http://127.0.0.1:8050/netease/audio/url?id=";
+    this.audioListApi = "http://127.0.0.1:8050/netease/playlist/detail?pid=";
 
     this.getInfo = function (keyword) {
         var url = this.searchApi + keyword;
@@ -181,9 +183,9 @@ function AudioNeteaseApi() {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 200 && data["result"]["songCount"] > 0) {
                 for (var i = 0; i < data["result"]["songs"].length; i++) {
-                    if ((data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)) {
+                    if (this.ab.config.useNeteaseUnblock || (data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)) {
                         info["sid"] = data["result"]["songs"][i]["id"].toString();
-                        info["aid"] = data["result"]["songs"][i]["album"]["id"];
+                        info["aid"] = data["result"]["songs"][i]["al"]["id"];
                         info["name"] = data["result"]["songs"][i]["name"];
                         break
                     }
@@ -220,10 +222,25 @@ function AudioNeteaseApi() {
         // 如果有版权问题 404
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
-            if (data["code"] === 200 && data["data"][0]["code"] === 404) {
-                return null;
+            // 判断是不是版权限制或者vip 总之很混乱
+            if (data["code"] === 200 &&
+                (data["data"][0]["code"] === 404 || data["data"][0]["freeTrialInfo"] !== null)) {
+                rs = httpGet(this.audiomatchApi + info["sid"]);
+                // 傻逼代码，怎么能写的这么傻逼
+                if (rs.status === 200){
+                    var tmpd = JSON.parse(rs.responseText);
+                    if (tmpd["code"] === 200 && tmpd["data"]["url"] !== ""){
+                        console.log(tmpd["data"]["url"]);
+                        info["cdns"] = [tmpd["data"]["url"]]
+                    }else{
+                        return null;
+                    }
+                }else{
+                    return null;
+                }
+            } else{
+                info["cdns"] = [this.audioApi + info["sid"] + ".mp3"];
             }
-            info["cdns"] = [this.audioApi + info["sid"] + ".mp3"];
             return info;
         }
         return null;
@@ -346,7 +363,7 @@ function BlackListMananger() {
     }
 }
 
-function bAudioBot(divId, roomId) {
+function bAudioBot(divId, roomId,config) {
     var self = this;
     this.ap = new APlayer({
         container: document.getElementById(divId),
@@ -355,8 +372,9 @@ function bAudioBot(divId, roomId) {
         volume: 0.6
     });
     this.playerId = divId;
+    this.config = config;
     this.audioApi = new AudioBilibiliApi();
-    this.audioNeteaseApi = new AudioNeteaseApi();
+    this.audioNeteaseApi = new AudioNeteaseApi(self);
     this.damukuApi = new DamukuApi(roomId);
     this.defaultPlayList = new DefaultPlayList(self);
     this.blacklist = new BlackListMananger();
@@ -376,7 +394,7 @@ function bAudioBot(divId, roomId) {
 
     // 如果你不想闲置歌单里的歌被顶掉的话就把这段注释掉.
     this.ap.on("listadd", function () {
-        if (self.ap.list.audios.length > 0 && self.ap.list.audios[0].artist === "System") {
+        if (self.config.player.priority && self.ap.list.audios.length > 0 && self.ap.list.audios[0].artist === "System") {
             self.skipForward();
         }
     });
@@ -384,9 +402,15 @@ function bAudioBot(divId, roomId) {
 
     this.ap.on("waiting", function () {
         while (self.ap.list.audios.length === 0 && self.defaultPlayList.sList.length >= 0) {
-            var nextAudio = self.defaultPlayList.getNext();
+            var nextAudio = null;
             // 如果要随机闲置列表的话
-            //var nextAudio = self.defaultPlayList.getNextRandom();
+            if (self.config.player.random){
+                nextAudio = self.defaultPlayList.getNextRandom();
+            }else{
+                nextAudio = self.defaultPlayList.getNext();
+            }
+
+            //v
             if (nextAudio === null) {
                 return;
             }
@@ -398,54 +422,84 @@ function bAudioBot(divId, roomId) {
         }
     });
 
+    this.laodConfig = function (){
+        // 添加网易云默认歌单
+        self.config.playlist.netease.forEach(function (tmp){self.defaultPlayList.addNeteaseList(tmp)});
+        // 添加bilibili默认歌单
+        self.config.playlist.bilibil.forEach(function (tmp){self.defaultPlayList.addBilibiliList(tmp)});
+
+        // 添加bilibili默认歌曲
+        self.config.song.bilibil.forEach(function (tmp){self.defaultPlayList.addAudio("bilibili", tmp)});
+        // 添加网易云默认歌曲
+        self.config.song.netease.forEach(function (tmp){self.defaultPlayList.addAudio("netease", tmp)});
+        // 正则关键字黑名单
+        self.config.blacklist.keywords.forEach(function (tmp){self.blacklist.addKeyword(tmp)});
+        // 网易id黑名单
+        self.config.blacklist.netease.forEach(function (tmp){self.blacklist.addSongId("netease", tmp)});
+        // b站id黑名单
+        self.config.blacklist.bilibili.forEach(function (tmp){if (tmp.indexOf("au") !== -1){tmp = tmp.replace("au","")}self.blacklist.addSongId("bilibili", tmp)});
+        // 黑名单用户
+        self.config.blacklist.user.forEach(function (tmp){self.blacklist.addUID(tmp)})
+        // 修改背景颜色，这里是
+        if (self.config.background.color !== null) {
+            self.changeBackgroundColor(self.config.background.color);
+        }
+        // 修改背景图片, 第一个是url地址，第二个是repeat，一般用no-repeaet 最后一个是size
+        if (self.config.background.image !== null && self.config.background.image.url !== null) {
+            self.setBackroundImage(self.config.background.image.url,
+                                    self.config.background.image.repeat,
+                                    self.config.background.image.size);
+        }
+    }
+
 
     this.removeFirst = function () {
-        this.remove(0);
+        self.remove(0);
     };
 
     this.remove = function (index) {
-        if (this.ap.list.audios.length === 0) {
+        if (self.ap.list.audios.length === 0) {
             return;
         }
-        if (index < 0 || index >= this.ap.list.audios.length) {
+        if (index < 0 || index >= self.ap.list.audios.length) {
             return
         }
         if (index === 0) {
-            this.ap.pause();
-            this.ap.list.remove(index);
-            this.ap.play();
+            self.ap.pause();
+            self.ap.list.remove(index);
+            self.ap.play();
         } else {
-            this.ap.list.remove(index);
+            self.ap.list.remove(index);
         }
 
     };
     this.skipForward = function () {
-        this.ap.pause();
-        this.ap.skipForward();
-        this.removeFirst();
+        self.ap.pause();
+        self.ap.skipForward();
+        self.removeFirst();
     };
 
 
     // 点bilibili歌
     this.addBilibili = function (url, sender) {
-        var sid = this.audioApi.getSid(url) !== 0 ? this.audioApi.getSid(url) : this.audioApi.searchSid(url);
+        var sid = self.audioApi.getSid(url) !== 0 ? self.audioApi.getSid(url) : self.audioApi.searchSid(url);
         if (sid === 0) {
             return false;
         }
         //黑名单检查
-        if (this.blacklist.checkKeyword(url) || this.blacklist.checkSongId("bilibili", sid)) {
+        if (self.blacklist.checkKeyword(url) || self.blacklist.checkSongId("bilibili", sid)) {
             return false;
         }
-        var info = this.audioApi.getInfo(sid);
+        var info = self.audioApi.getInfo(sid);
         if (info === null) {
             return false;
         }
-        var cdns = this.audioApi.getPlayUrl(sid);
+        var cdns = self.audioApi.getPlayUrl(sid);
         if (cdns === null) {
             return false;
         }
 
-        this.ap.list.add({
+        self.ap.list.add({
             name: info["name"] + " - " + info["up"],
             artist: sender,
             url: cdns["cdns"][0],
@@ -458,15 +512,15 @@ function bAudioBot(divId, roomId) {
     // 点网易歌
     this.addNetease = function (url, sender) {
         var keyword = url;
-        var info = this.audioNeteaseApi.getInfo(keyword);
+        var info = self.audioNeteaseApi.getInfo(keyword);
         if (info === null) {
             return false;
         }
         //黑名单检查
-        if (this.blacklist.checkKeyword(keyword) || this.blacklist.checkSongId("netease", info["sid"])) {
+        if (self.blacklist.checkKeyword(keyword) || self.blacklist.checkSongId("netease", info["sid"])) {
             return false;
         }
-        this.ap.list.add({
+        self.ap.list.add({
             name: info["name"],
             artist: sender,
             url: info["cdns"][0],
@@ -485,39 +539,41 @@ function bAudioBot(divId, roomId) {
                 continue;
             }
 
-            // 如果不是房管或者舰长，跳过。
-            // if (data[i]["isadmin"] === 1 || data[i]["guard_level"] > 0){
-            //     // do nothing
-            // }else{
-            //     continue;
-            // }
+            // 如果没权限，跳过。
+            if (self.config.privilege.default ||
+                (self.config.privilege.admin && data[i]["isadmin"] === 1) ||
+                (self.config.privilege.vip && data[i]["guard_level"] > 0)){
+                // do nothing
+            }else{
+                continue;
+            }
 
             // b站点歌关键字
-            if (data[i]["text"].indexOf("点b歌") === 0) {
+            if (data[i]["text"].indexOf(self.config.hintword.bilibili) === 0) {
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
                 self.addBilibili(keyword, data[i]["sender"]);
                 continue;
             }
             // 网易点歌关键字
-            if (data[i]["text"].indexOf("点w歌") === 0) {
+            if (data[i]["text"].indexOf(self.config.hintword.netease) === 0) {
                 var keyword = data[i]["text"].split(" ").slice(1).join(" ");
                 self.addNetease(keyword, data[i]["sender"]);
                 continue;
             }
             // 切歌关键字
-            if (data[i]["text"].indexOf("切歌") === 0) {
+            if (data[i]["text"].indexOf(self.config.hintword.skip) === 0) {
                 // 房管切歌
-                if (self.ap.list.audios.length > 0 && data[i]["isadmin"] === 1) {
+                if (self.config.skip.admin && self.ap.list.audios.length > 0 && data[i]["isadmin"] === 1) {
                     self.skipForward();
                     continue;
                 }
                 // 舰长切歌
-                if (self.ap.list.audios.length > 0 && data[i]["guard_level"] > 0) {
+                if (self.config.skip.vip && self.ap.list.audios.length > 0 && data[i]["guard_level"] > 0) {
                     self.skipForward();
                     continue;
                 }
                 // 切自己歌
-                if (self.ap.list.audios.length > 0 && data[i]["sender"] === self.ap.list.audios[0]["artist"]) {
+                if (self.config.skip.default && self.ap.list.audios.length > 0 && data[i]["sender"] === self.ap.list.audios[0]["artist"]) {
                     self.skipForward();
                     continue;
                 }
@@ -536,7 +592,11 @@ function bAudioBot(divId, roomId) {
         document.body.style.backgroundSize = size;
     };
 
-    //开始获取弹幕 500ms
-    this.fetchDamuRepeater = setInterval(this.checkDamu, 500);
     this.changeBackgroundColor("#FFB6C1");
+    this.laodConfig();
+    if (self.config.fetchDanmu){
+        //开始获取弹幕 500ms
+        self.fetchDamuRepeater = setInterval(this.checkDamu, 500);
+    }
+
 }
