@@ -223,22 +223,29 @@ function AudioNeteaseApi(ab) {
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             // 判断是不是版权限制或者vip 总之很混乱
-            if (data["code"] === 200 &&
-                (data["data"][0]["code"] === 404 || data["data"][0]["freeTrialInfo"] !== null)) {
-                rs = httpGet(this.audiomatchApi + info["sid"]);
-                // 傻逼代码，怎么能写的这么傻逼
-                if (rs.status === 200){
-                    var tmpd = JSON.parse(rs.responseText);
-                    if (tmpd["code"] === 200 && tmpd["data"]["url"] !== ""){
-                        console.log(tmpd["data"]["url"]);
-                        info["cdns"] = [tmpd["data"]["url"]]
+            // id 错误
+            if (data["code"] !== 200){
+                return null;
+            }
+            // !== 200说明没有版权或者以及不能试听 || 有试听信息说明是vip歌曲
+            if (data["data"][0]["code"] !== 200 || data["data"][0]["freeTrialInfo"] !== null){
+                // 尝试使用match
+                if (this.ab.config.useNeteaseUnblock){
+                    rs = httpGet(this.audiomatchApi + info["sid"]);
+                    if (rs.status === 200){
+                        var tmpd = JSON.parse(rs.responseText);
+                        if (tmpd["code"] === 200 && tmpd["data"]["url"] !== ""){
+                            info["cdns"] = [tmpd["data"]["url"]]
+                        }else{
+                            return null;
+                        }
                     }else{
                         return null;
                     }
                 }else{
                     return null;
                 }
-            } else{
+            }else{
                 info["cdns"] = [this.audioApi + info["sid"] + ".mp3"];
             }
             return info;
