@@ -9,13 +9,13 @@
 
 0.0.x 旧版本版本用户注意, 本次更新不能单纯靠替换代码实现，请等待新版本发布或者自行使用npm
 
-`
+```
 git clone https://github.com/LXG-Shadow/BilibiliAudioBot.git
 
 cd BilibiliAudioBot
 
 npm install
-`
+````
 
 直接运行
 `
