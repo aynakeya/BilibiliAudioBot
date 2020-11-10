@@ -11,7 +11,9 @@
 
 `
 git clone https://github.com/LXG-Shadow/BilibiliAudioBot.git
+
 cd BilibiliAudioBot
+
 npm install
 `
 
