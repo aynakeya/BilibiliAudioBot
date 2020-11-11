@@ -9,6 +9,8 @@
 
 0.0.x 旧版本版本用户注意, 本次更新不能单纯靠替换代码实现，请等待新版本发布或者自行使用npm
 
+似乎electron9.3.4有问题，无法播放歌曲。建议使用electron10
+
 ```
 git clone https://github.com/LXG-Shadow/BilibiliAudioBot.git
 

@@ -168,22 +168,19 @@ function AudioNeteaseApi(ab) {
     this.audioListApi = "http://127.0.0.1:8050/netease/playlist/detail?pid=";
 
     this.getInfo = function (keyword) {
-        var url = this.searchApi + keyword;
-        $.ajaxSetup({
-            async: false,
-            crossDomain: true,
-            xhrFields: {
-                withCredentials: true
-            }
-        });
+        // 是不是数字
+        var sidflag = !isNaN(keyword);
         var info = {};
         info["sid"] = null;
-        var rs = $.get(url);
+        var rs = httpGet(this.searchApi + keyword);
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 200 && data["result"]["songCount"] > 0) {
                 for (var i = 0; i < data["result"]["songs"].length; i++) {
                     if (this.ab.config.useNeteaseUnblock || (data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)) {
+                        if (sidflag && data["result"]["songs"][i]["id"].toString() !== keyword){
+                            continue;
+                        }
                         info["sid"] = data["result"]["songs"][i]["id"].toString();
                         info["aid"] = data["result"]["songs"][i]["al"]["id"];
                         info["name"] = data["result"]["songs"][i]["name"];
