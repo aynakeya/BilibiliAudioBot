@@ -77,7 +77,7 @@ apiserver.on("request", async function (req, resp) {
             var id = urlparsed.query.id;
             if (typeof (id) !== "undefined") {
                 try {
-                    var result = await match(id, ['qq', 'kuwo', 'migu']);
+                    var result = await match(id, ['qq', "kuwo", "kugou", 'migu']);
                     httpLog("audio api: sending response", 2);
                     resp.end(JSON.stringify({"code": 200, "data": result}));
                 } catch (err) {
