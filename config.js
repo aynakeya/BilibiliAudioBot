@@ -45,15 +45,26 @@ var myConfig = {
         "bilibili":"点b歌",
         // 切歌关键字
         "skip":"切歌",
+        // 优先播放
+        "playByIndex":"播放",
     },
     // 切歌权限
     "skip":{
-        //房管切歌
+        // 房管切歌
         "admin":true,
         // 舰长切歌
         "vip":true,
         // 自己切自己歌
         "default":true
+    },
+    // 优先播放 权限
+    "playByIndex":{
+        // 房管
+        "admin":true,
+        // 舰长
+        "vip":false,
+        // 所有人
+        "default":false
     },
     // 点歌权限
     "privilege":{
@@ -70,7 +81,6 @@ var myConfig = {
     "fetchDanmu":true,
     "useNeteaseUnblock":true
 }
-
 
 var defaultConfig = {
     "room_id": null,
@@ -101,6 +111,8 @@ var defaultConfig = {
         "netease":"点w歌",
         "bilibili":"点b歌",
         "skip":"切歌",
+        // 优先播放
+        "playByIndex":"播放"
     },
     "skip":{
         // 房管切歌
@@ -108,6 +120,15 @@ var defaultConfig = {
         // 舰长切歌
         "vip":true,
         // 自己切自己歌
+        "default":true
+    },
+    // 优先播放 权限
+    "playByIndex":{
+        // 房管
+        "admin":true,
+        // 舰长
+        "vip":true,
+        // 所有人
         "default":true
     },
     // 点歌权限

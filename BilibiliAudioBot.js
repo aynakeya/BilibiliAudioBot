@@ -426,6 +426,22 @@ function bAudioBot(divId, roomId,config) {
         }
     });
 
+    // click listener
+    // assume chrome excuse listeners in order
+    this.ap.template.list.addEventListener('click', function (e) {
+        var target = void 0;
+        if (e.target.tagName.toUpperCase() === 'LI') {
+            target = e.target;
+        } else {
+            target = e.target.parentElement;
+        }
+        var audioIndex = parseInt(target.getElementsByClassName('aplayer-list-index')[0].innerHTML) - 1;
+        if (audioIndex !== 0) {
+            self.playByIndex(audioIndex);
+        }
+    });
+
+
     this.laodConfig = function (){
         // 添加网易云默认歌单
         self.config.playlist.netease.forEach(function (tmp){self.defaultPlayList.addNeteaseList(tmp)});
@@ -482,6 +498,34 @@ function bAudioBot(divId, roomId,config) {
         self.ap.skipForward();
         self.removeFirst();
     };
+
+    this.playByIndex = function (audioIndex){
+        if (audioIndex===0||audioIndex>=self.ap.list.audios.length){
+            return ;
+        }
+        self.ap.list.switch(audioIndex);
+        var tmp = self.ap.list.audios[audioIndex];
+        for (var i=audioIndex;i>=0;i--){
+            self.ap.list.audios[i] = self.ap.list.audios[i-1]
+        }
+        self.ap.list.audios[0] = tmp;
+        // 重置内部index
+        self.ap.list.index = 0;
+        // 修改html
+        var lilist = self.ap.container.querySelectorAll('.aplayer-list li');
+        for (var i=0;i<self.ap.list.audios.length;i++){
+            lilist[i].getElementsByClassName('aplayer-list-title')[0].textContent = self.ap.list.audios[i]["name"];
+            lilist[i].getElementsByClassName('aplayer-list-author')[0].textContent = self.ap.list.audios[i]["artist"];
+        }
+        // 清除歌词
+        self.ap.lrc.parsed = [];
+        // 重置html选中效果
+        var light = self.ap.container.getElementsByClassName('aplayer-list-light')[0];
+        if (light) {
+            light.classList.remove('aplayer-list-light');
+        }
+        self.ap.container.querySelectorAll('.aplayer-list li')[0].classList.add('aplayer-list-light');
+    }
 
 
     // 点bilibili歌
@@ -580,6 +624,28 @@ function bAudioBot(divId, roomId,config) {
                 if (self.config.skip.default && self.ap.list.audios.length > 0 && data[i]["sender"] === self.ap.list.audios[0]["artist"]) {
                     self.skipForward();
                     continue;
+                }
+            }
+
+            // 优先播放
+            if (data[i]["text"].indexOf(self.config.hintword.playByIndex) === 0) {
+                var aindex = data[i]["text"].split(" ").slice(1).join(" ");
+                if (!isNaN(aindex)){
+                    aindex = parseInt(aindex)-1
+                    // 房管切歌
+                    if (self.config.playByIndex.admin && data[i]["isadmin"] === 1) {
+                        self.playByIndex(aindex);
+                        continue;
+                    }
+                    // 舰长切歌
+                    if (self.config.skip.vip && data[i]["guard_level"] > 0) {
+                        self.playByIndex(aindex);
+                        continue;
+                    }
+                    // 切自己歌
+                    if (self.config.skip.default  && data[i]["sender"] === self.ap.list.audios[0]["artist"]) {
+                        self.playByIndex(aindex);
+                    }
                 }
             }
         }
