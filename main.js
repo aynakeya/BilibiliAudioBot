@@ -67,6 +67,12 @@ const bilibilifilter = {
         "https://api.live.bilibili.com/*"]
 }
 
+const neteasefilter = {
+    urls: ['*://*.163.com/*',
+        "*://music.163.com/*",
+        "*://interface.music.163.com/*"]
+}
+
 app.on('window-all-closed', function() {
     // 在 OS X 上，通常用户在明确地按下 Cmd + Q 之前
     // 应用会保持活动状态
@@ -92,6 +98,12 @@ app.on('ready', function() {
     session.defaultSession.webRequest.onBeforeSendHeaders(bilibilifilter, (details, callback) => {
         details.requestHeaders['Referer'] = 'https://www.bilibili.com';
         //details.requestHeaders["origin"] = "https://www.bilibili.com";
+        callback({ requestHeaders: details.requestHeaders });
+    });
+
+    session.defaultSession.webRequest.onBeforeSendHeaders(neteasefilter, (details, callback) => {
+        details.requestHeaders['X-Real-IP'] = '118.88.88.88';
+        details.requestHeaders["X-Forwarded-For"] = "118.88.88.88"
         callback({ requestHeaders: details.requestHeaders });
     });
 
