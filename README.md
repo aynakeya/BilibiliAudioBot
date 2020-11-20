@@ -28,3 +28,9 @@ windows编译
 `
 npm run packagerDenpend
 `
+
+
+## changelog
+
+0.1.4 添加x-real-ip 以及 x-forward-ip
+0.1.5 添加点击提前播放歌曲
