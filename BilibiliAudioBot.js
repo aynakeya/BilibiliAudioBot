@@ -11,6 +11,17 @@ function httpGet(url) {
     return $.get(url);
 }
 
+function httpPost(url,para) {
+    $.ajaxSetup({
+        async: false,
+        crossDomain: true,
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+    return $.post(url, para);
+}
+
 
 function DamukuApi(rooomid) {
     this.roomId = rooomid;
@@ -18,14 +29,7 @@ function DamukuApi(rooomid) {
     this.latestDamuTime = 0;
 
     this.getNewestDamu = function () {
-        $.ajaxSetup({
-            async: false,
-            crossDomain: true,
-            xhrFields: {
-                withCredentials: true
-            }
-        });
-        var rs = $.post(this.DamuApi, {"roomid": this.roomId});
+        var rs = httpPost(this.DamuApi, {"roomid": this.roomId});
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 0) {
@@ -92,14 +96,7 @@ function AudioBilibiliApi() {
 
     this.getInfo = function (sid) {
         var url = this.bAudioInfo + sid;
-        $.ajaxSetup({
-            async: false,
-            crossDomain: true,
-            xhrFields: {
-                withCredentials: true
-            }
-        });
-        var rs = $.get(url);
+        var rs =httpGet(url);
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 0) {
@@ -118,14 +115,7 @@ function AudioBilibiliApi() {
 
     this.getPlayUrl = function (sid) {
         var url = this.bAudioUrl + sid;
-        $.ajaxSetup({
-            async: false,
-            crossDomain: true,
-            xhrFields: {
-                withCredentials: true
-            }
-        });
-        var rs = $.get(url);
+        var rs = httpGet(url);
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 0) {
@@ -196,7 +186,7 @@ function AudioNeteaseApi(ab) {
         if (info["sid"] === null) {
             return null;
         }
-        rs = $.get(this.lyricApi + info["sid"]);
+        rs = httpGet(this.lyricApi + info["sid"]);
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 200 && typeof (data["lyric"]) !== "undefined") {
@@ -205,7 +195,7 @@ function AudioNeteaseApi(ab) {
                 info["lyric"] = "";
             }
         }
-        rs = $.get(this.albumApi + info["aid"]);
+        rs = httpGet(this.albumApi + info["aid"]);
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
             if (data["code"] === 200) {
@@ -215,7 +205,7 @@ function AudioNeteaseApi(ab) {
             }
         }
         // 链接检查
-        rs = $.get(this.audioApi1 + info["sid"]);
+        rs = httpGet(this.audioApi1 + info["sid"]);
         // 如果有版权问题 404
         if (rs.status === 200) {
             var data = JSON.parse(rs.responseText);
