@@ -413,7 +413,6 @@ function bAudioBot(divId, roomId,config) {
             }else{
                 nextAudio = self.defaultPlayList.getNext();
             }
-
             //v
             if (nextAudio === null) {
                 return;
@@ -440,6 +439,11 @@ function bAudioBot(divId, roomId,config) {
             self.playByIndex(audioIndex);
         }
     });
+
+    this.ap.template.skipForwardButton.parentNode
+        .replaceChild(this.ap.template.skipForwardButton.cloneNode(true),this.ap.template.skipForwardButton);
+    this.ap.template.skipForwardButton =  this.ap.container.querySelector('.aplayer-icon-forward');
+    this.ap.template.skipForwardButton.addEventListener("click",function (){self.skipForward();});
 
 
     this.laodConfig = function (){
@@ -495,7 +499,7 @@ function bAudioBot(divId, roomId,config) {
     };
     this.skipForward = function () {
         self.ap.pause();
-        self.ap.skipForward();
+        //self.ap.skipForward();
         self.removeFirst();
     };
 
