@@ -73,6 +73,16 @@ const neteasefilter = {
         "*://interface.music.163.com/*"]
 }
 
+const allfilter = {
+    urls: ['https://*.bilibili.com/*',
+        "https://*.bilivideo.com/*",
+        "*://*.com/*bilivideo.com*",
+        "https://api.live.bilibili.com/*",
+        '*://*.163.com/*',
+        "*://music.163.com/*",
+        "*://interface.music.163.com/*"]
+}
+
 app.on('window-all-closed', function() {
     // 在 OS X 上，通常用户在明确地按下 Cmd + Q 之前
     // 应用会保持活动状态
@@ -95,13 +105,13 @@ app.on('ready', function() {
 
     });
 
-    session.defaultSession.webRequest.onBeforeSendHeaders(bilibilifilter, (details, callback) => {
-        details.requestHeaders['Referer'] = 'https://www.bilibili.com';
-        //details.requestHeaders["origin"] = "https://www.bilibili.com";
-        callback({ requestHeaders: details.requestHeaders });
-    });
+    // session.defaultSession.webRequest.onBeforeSendHeaders(bilibilifilter, (details, callback) => {
+    //     details.requestHeaders['Referer'] = 'https://www.bilibili.com';
+    //     callback({ requestHeaders: details.requestHeaders });
+    // });
 
-    session.defaultSession.webRequest.onBeforeSendHeaders(neteasefilter, (details, callback) => {
+    session.defaultSession.webRequest.onBeforeSendHeaders(allfilter, (details, callback) => {
+        details.requestHeaders['Referer'] = 'https://www.bilibili.com';
         details.requestHeaders['X-Real-IP'] = '118.88.88.88';
         details.requestHeaders["X-Forwarded-For"] = "118.88.88.88"
         callback({ requestHeaders: details.requestHeaders });

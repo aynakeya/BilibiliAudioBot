@@ -1,6 +1,6 @@
 var audiobot = null;
 
-function httpGet(url) {
+async function httpGet(url) {
     $.ajaxSetup({
         async: false,
         crossDomain: true,
@@ -8,10 +8,14 @@ function httpGet(url) {
             withCredentials: true
         }
     });
-    return $.get(url);
+    let rs = $.get(url);
+    if (rs === null || rs.status !== 200){
+        return null;
+    }
+    return JSON.parse(rs.responseText);
 }
 
-function httpPost(url,para) {
+async function httpPost(url,para) {
     $.ajaxSetup({
         async: false,
         crossDomain: true,
@@ -19,7 +23,11 @@ function httpPost(url,para) {
             withCredentials: true
         }
     });
-    return $.post(url, para);
+    let rs = $.post(url, para);
+    if (rs === null || rs.status !== 200){
+        return null;
+    }
+    return JSON.parse(rs.responseText);
 }
 
 
@@ -28,13 +36,12 @@ function DamukuApi(rooomid) {
     this.DamuApi = "https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory";
     this.latestDamuTime = 0;
 
-    this.getNewestDamu = function () {
-        var rs = httpPost(this.DamuApi, {"roomid": this.roomId});
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+    this.getNewestDamu = async function () {
+        let data = await httpPost(this.DamuApi, {"roomid": this.roomId});
+        if (data) {
             if (data["code"] === 0) {
                 var rdata = [];
-                for (var i = 0; i < data["data"]["room"].length; i++) {
+                for (let i = 0; i < data["data"]["room"].length; i++) {
                     if (parseInt(data["data"]["room"][i]["check_info"]["ts"]) <= this.latestDamuTime) {
                         continue;
                     }
@@ -65,7 +72,7 @@ function AudioBilibiliApi() {
     this.bAudioListInfo = "https://www.bilibili.com/audio/music-service-c/web/song/of-menu?ps=100&";
 
     this.getSid = function (url) {
-        var au = /au[0-9]+/.exec(url);
+        const au = /au[0-9]+/.exec(url);
         if (au === null) {
             return 0;
         } else {
@@ -73,12 +80,11 @@ function AudioBilibiliApi() {
         }
     };
 
-    this.searchSid = function (keyword) {
-        var rs = httpGet(this.bAudioSearch + keyword);
-        if (rs === null || rs.status !== 200) {
+    this.searchSid = async function (keyword) {
+        let data = await httpGet(this.bAudioSearch + keyword);
+        if (data === null) {
             return 0;
         }
-        var data = JSON.parse(rs.responseText);
         if (data["code"] !== 0 || data["data"]["result"].length === 0) {
             return 0;
         }
@@ -86,7 +92,7 @@ function AudioBilibiliApi() {
     };
 
     this.getamid = function (url) {
-        var au = /am[0-9]+/.exec(url);
+        const au = /am[0-9]+/.exec(url);
         if (au === null) {
             return 0;
         } else {
@@ -94,11 +100,10 @@ function AudioBilibiliApi() {
         }
     };
 
-    this.getInfo = function (sid) {
+    this.getInfo = async function (sid) {
         var url = this.bAudioInfo + sid;
-        var rs =httpGet(url);
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+        var data =await httpGet(url);
+        if (data) {
             if (data["code"] === 0) {
                 return {
                     "name": data["data"]["title"],
@@ -113,11 +118,9 @@ function AudioBilibiliApi() {
         }
     };
 
-    this.getPlayUrl = function (sid) {
-        var url = this.bAudioUrl + sid;
-        var rs = httpGet(url);
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+    this.getPlayUrl = async function (sid) {
+        let data = await httpGet(this.bAudioUrl + sid);
+        if (data) {
             if (data["code"] === 0) {
                 return {"cdns": data["data"]["cdns"]};
             }
@@ -127,15 +130,14 @@ function AudioBilibiliApi() {
         }
     };
 
-    this.getAudioList = function (amid) {
+    this.getAudioList = async function (amid) {
         var pn = 1;
         var aList = [];
         while (true) {
-            var rs = httpGet(this.bAudioListInfo + "sid=" + amid + "&pn=" + pn);
-            if (rs === null || rs.status !== 200) {
+            var data = await httpGet(this.bAudioListInfo + "sid=" + amid + "&pn=" + pn);
+            if (data === null) {
                 break
             }
-            var data = JSON.parse(rs.responseText);
             for (var i = 0; i < data["data"]["data"].length; i++) {
                 aList.push(data["data"]["data"][i]["id"]);
             }
@@ -157,14 +159,13 @@ function AudioNeteaseApi(ab) {
     this.audioApi1 = "http://127.0.0.1:8050/netease/audio/url?id=";
     this.audioListApi = "http://127.0.0.1:8050/netease/playlist/detail?pid=";
 
-    this.getInfo = function (keyword) {
+    this.getInfo = async function (keyword) {
         // 是不是数字
         var sidflag = !isNaN(keyword);
         var info = {};
         info["sid"] = null;
-        var rs = httpGet(this.searchApi + keyword);
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+        var data = await httpGet(this.searchApi + keyword);
+        if (data) {
             if (data["code"] === 200 && data["result"]["songCount"] > 0) {
                 for (var i = 0; i < data["result"]["songs"].length; i++) {
                     if (this.ab.config.useNeteaseUnblock || (data["result"]["songs"][i]["fee"] === 0 || data["result"]["songs"][i]["fee"] === 8)) {
@@ -186,18 +187,16 @@ function AudioNeteaseApi(ab) {
         if (info["sid"] === null) {
             return null;
         }
-        rs = httpGet(this.lyricApi + info["sid"]);
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+        data = await httpGet(this.lyricApi + info["sid"]);
+        if (data) {
             if (data["code"] === 200 && typeof (data["lyric"]) !== "undefined") {
                 info["lyric"] = data["lyric"];
             } else {
                 info["lyric"] = "";
             }
         }
-        rs = httpGet(this.albumApi + info["aid"]);
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+        data =await httpGet(this.albumApi + info["aid"]);
+        if (data) {
             if (data["code"] === 200) {
                 info["cover"] = data["album"]["picUrl"];
             } else {
@@ -205,10 +204,9 @@ function AudioNeteaseApi(ab) {
             }
         }
         // 链接检查
-        rs = httpGet(this.audioApi1 + info["sid"]);
+        data = await httpGet(this.audioApi1 + info["sid"]);
         // 如果有版权问题 404
-        if (rs.status === 200) {
-            var data = JSON.parse(rs.responseText);
+        if (data) {
             // 判断是不是版权限制或者vip 总之很混乱
             // id 错误
             if (data["code"] !== 200){
@@ -218,9 +216,8 @@ function AudioNeteaseApi(ab) {
             if (data["data"][0]["code"] !== 200 || data["data"][0]["freeTrialInfo"] !== null){
                 // 尝试使用match
                 if (this.ab.config.useNeteaseUnblock){
-                    rs = httpGet(this.audiomatchApi + info["sid"]);
-                    if (rs.status === 200){
-                        var tmpd = JSON.parse(rs.responseText);
+                    let tmpd = await httpGet(this.audiomatchApi + info["sid"]);
+                    if (tmpd){
                         if (tmpd["code"] === 200 && tmpd["data"]["url"] !== ""){
                             info["cdns"] = [tmpd["data"]["url"]]
                         }else{
@@ -240,13 +237,12 @@ function AudioNeteaseApi(ab) {
         return null;
     };
 
-    this.getAudioList = function (id) {
-        var rs = httpGet(this.audioListApi + id);
+    this.getAudioList = async function (id) {
+        var data = await httpGet(this.audioListApi + id);
         var aList = [];
-        if (rs === null || rs.status !== 200) {
+        if (data === null) {
             return aList;
         }
-        var data = JSON.parse(rs.responseText);
         if (data["code"] !== 200) {
             return aList;
         }
@@ -293,19 +289,19 @@ function DefaultPlayList(ab) {
         this.sList.push({"type": aType, "name": aName})
     };
 
-    this.addBilibiliList = function (url) {
+    this.addBilibiliList = async function (url) {
         var amid = this.ab.audioApi.getamid(url);
         if (amid === 0) {
             return
         }
-        var alist = this.ab.audioApi.getAudioList(amid);
+        var alist = await this.ab.audioApi.getAudioList(amid);
         for (var i = 0; i < alist.length; i++) {
             this.addAudio("bilibili", "au" + alist[i]);
         }
     };
 
-    this.addNeteaseList = function (id) {
-        var alist = this.ab.audioNeteaseApi.getAudioList(id);
+    this.addNeteaseList = async function (id) {
+        var alist = await this.ab.audioNeteaseApi.getAudioList(id);
         for (var i = 0; i < alist.length; i++) {
             this.addAudio("netease", alist[i].toString());
         }
@@ -357,15 +353,14 @@ function BlackListMananger() {
     }
 }
 
-function bAudioBot(divId, roomId,config) {
+function bAudioBot(container, roomId,config) {
     var self = this;
     this.ap = new APlayer({
-        container: document.getElementById(divId),
+        container: container,
         autoplay: true,
         showlrc: true,
         volume: 0.6
     });
-    this.playerId = divId;
     this.config = config;
     this.audioApi = new AudioBilibiliApi();
     this.audioNeteaseApi = new AudioNeteaseApi(self);
@@ -394,7 +389,7 @@ function bAudioBot(divId, roomId,config) {
     });
 
 
-    this.ap.on("waiting", function () {
+    this.ap.on("waiting", async function () {
         while (self.ap.list.audios.length === 0 && self.defaultPlayList.sList.length >= 0) {
             var nextAudio = null;
             // 如果要随机闲置列表的话
@@ -408,9 +403,9 @@ function bAudioBot(divId, roomId,config) {
                 return;
             }
             if (nextAudio["type"] === "bilibili") {
-                self.addBilibili(nextAudio["name"], "System");
+                await self.addBilibili(nextAudio["name"], "System");
             } else if (nextAudio["type"] === "netease") {
-                self.addNetease(nextAudio["name"], "System");
+                await self.addNetease(nextAudio["name"], "System");
             }
         }
     });
@@ -523,8 +518,8 @@ function bAudioBot(divId, roomId,config) {
 
 
     // 点bilibili歌
-    this.addBilibili = function (url, sender) {
-        var sid = self.audioApi.getSid(url) !== 0 ? self.audioApi.getSid(url) : self.audioApi.searchSid(url);
+    this.addBilibili = async function (url, sender) {
+        var sid = self.audioApi.getSid(url) !== 0 ? self.audioApi.getSid(url) : await self.audioApi.searchSid(url);
         if (sid === 0) {
             return false;
         }
@@ -532,11 +527,11 @@ function bAudioBot(divId, roomId,config) {
         if (self.blacklist.checkKeyword(url) || self.blacklist.checkSongId("bilibili", sid)) {
             return false;
         }
-        var info = self.audioApi.getInfo(sid);
+        var info = await self.audioApi.getInfo(sid);
         if (info === null) {
             return false;
         }
-        var cdns = self.audioApi.getPlayUrl(sid);
+        var cdns = await self.audioApi.getPlayUrl(sid);
         if (cdns === null) {
             return false;
         }
@@ -552,9 +547,9 @@ function bAudioBot(divId, roomId,config) {
     };
 
     // 点网易歌
-    this.addNetease = function (url, sender) {
+    this.addNetease = async function (url, sender) {
         var keyword = url;
-        var info = self.audioNeteaseApi.getInfo(keyword);
+        var info = await self.audioNeteaseApi.getInfo(keyword);
         if (info === null) {
             return false;
         }
@@ -573,8 +568,8 @@ function bAudioBot(divId, roomId,config) {
     };
 
 
-    this.checkDamu = function () {
-        var data = self.damukuApi.getNewestDamu();
+    this.checkDamu = async function () {
+        var data = await self.damukuApi.getNewestDamu();
         for (var i = 0; i < data.length; i++) {
             // 如果在黑名单内，直接跳过
             if (self.blacklist.checkUID(data[i]["uid"])) {
@@ -662,5 +657,4 @@ function bAudioBot(divId, roomId,config) {
         //开始获取弹幕 500ms
         self.fetchDamuRepeater = setInterval(this.checkDamu, 500);
     }
-
 }

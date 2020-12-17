@@ -55,7 +55,6 @@
 	<p>0.0.3: 添加闲置歌单。</p>
 	<p>0.0.4: 添加黑名单，修复bug</p>
 	<p>0.1.0: 重写</p>
-
 </div>
 <button onclick="audiobot.skipForward()">简陋的切歌</button>
 <input type="number" id="deleteIndex" style="width: 50px">
@@ -65,9 +64,9 @@
 <script type="application/javascript">
 	function createBot(bconfig) {
 		if (bconfig.room_id === null) {
-			audiobot = new bAudioBot("aplayer", document.getElementById("rid").value,bconfig);
+			audiobot = new bAudioBot(document.getElementById("aplayer"), document.getElementById("rid").value,bconfig);
 		} else {
-			audiobot = new bAudioBot("aplayer", bconfig.room_id,bconfig);
+			audiobot = new bAudioBot(document.getElementById("aplayer"), bconfig.room_id,bconfig);
 		}
 		document.getElementById("preaction").remove();
 	}
